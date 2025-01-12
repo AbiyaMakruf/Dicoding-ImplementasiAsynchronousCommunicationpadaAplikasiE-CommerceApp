@@ -1,0 +1,56 @@
+apiVersion: apps/v1 # Menentukan versi API yang digunakan untuk StatefulSet
+kind: StatefulSet # Menentukan jenis resource, dalam hal ini StatefulSet untuk stateful aplikasi
+metadata:
+  name: rabbitmq # Menentukan nama StatefulSet sebagai "rabbitmq"
+spec:
+  serviceName: "rabbitmq" # Menentukan nama layanan yang digunakan oleh StatefulSet
+  replicas: 1 # Menentukan jumlah replika pod yang harus dijalankan (hanya 1 instance)
+  selector:
+    matchLabels:
+      app: rabbitmq # Menentukan label selector untuk mencocokkan pod yang dikelola oleh StatefulSet
+  template:
+    metadata:
+      labels:
+        app: rabbitmq # Menetapkan label "app: rabbitmq" untuk pod
+    spec:
+      containers:
+        - name: rabbitmq # Menentukan nama container sebagai "rabbitmq"
+          image: rabbitmq:3.11-management # Menentukan image RabbitMQ dengan versi 3.11 yang memiliki UI manajemen (sesuai website dicoding)
+          ports:
+            - containerPort: 5672 # Mengekspos port 5672 untuk komunikasi AMQP
+            - containerPort: 15672 # Mengekspos port 15672 untuk UI manajemen
+          env:
+            - name: RABBITMQ_DEFAULT_USER # Menetapkan variabel lingkungan untuk username default
+              value: "guest" # Nilai username default "guest"
+            - name: RABBITMQ_DEFAULT_PASS # Menetapkan variabel lingkungan untuk password default
+              value: "guest" # Nilai password default "guest"
+          volumeMounts:
+            - name: rabbitmq-data # Menghubungkan volume penyimpanan dengan container
+              mountPath: /var/lib/rabbitmq # Menentukan direktori penyimpanan untuk data RabbitMQ
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-data # Menentukan nama volume claim template
+      spec:
+        accessModes: ["ReadWriteOnce"] # Menentukan mode akses, hanya satu node yang bisa menulis
+        resources:
+          requests:
+            storage: 1Gi # Menentukan jumlah penyimpanan yang dialokasikan sebesar 1Gi
+
+---
+apiVersion: v1 # Menentukan versi API yang digunakan untuk Service
+kind: Service # Menentukan jenis resource, dalam hal ini Service
+metadata:
+  name: rabbitmq # Menentukan nama Service sebagai "rabbitmq"
+spec:
+  clusterIP: None # Menentukan Service sebagai headless (tanpa ClusterIP) agar StatefulSet dapat mengelola DNS sendiri
+  selector:
+    app: rabbitmq # Memilih pod dengan label "app: rabbitmq" untuk dikaitkan dengan Service
+  ports:
+    - name: amqp # Menentukan nama port untuk komunikasi AMQP
+      protocol: TCP # Menggunakan protokol TCP
+      port: 5672 # Mengekspos port 5672 pada Service
+      targetPort: 5672 # Mengarahkan permintaan ke port 5672 pada pod
+    - name: management # Menentukan nama port untuk UI manajemen
+      protocol: TCP # Menggunakan protokol TCP
+      port: 15672 # Mengekspos port 15672 pada Service
+      targetPort: 15672 # Mengarahkan permintaan ke port 15672 pada pod

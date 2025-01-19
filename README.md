@@ -1,4 +1,4 @@
-# Proyek Kedua: Dicoding-DeployAplikasiKarsaJobsdenganKubernetes
+# Proyek Akhir: Dicoding-ImplementasiAsynchronousCommunicationpadaAplikasiE-CommerceApp
 ## Penilaian Proyek
 Proyek ini berhasil mendapatkan bintang 4/5 pada submission dicoding course Belajar Membangun Arsitektur Microservices.
 
